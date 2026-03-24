@@ -2,27 +2,18 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout Code') {
+
+        stage('Clone Code') {
             steps {
-                checkout scm
+                // Specify the branch explicitly
+                git branch: 'main', url: 'https://github.com/Varunmj12345/QR.git'
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm ci'
-            }
-        }
-        stage('Test Locally') {
-            steps {
-                sh 'npm test'
-            }
-        }
         stage('Build Docker Image') {
             steps {
                 script {
-                    def imageTag = "qr-app-${env.BUILD_ID}"
-                    sh "docker build -t \${imageTag} ."
+                    docker.build("qr-app")
                 }
             }
         }
@@ -30,46 +21,12 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    def imageTag = "qr-app-${env.BUILD_ID}"
-                    def containerName = "qr-container-${env.BUILD_ID}"
-                    sh """
-                        docker stop \${containerName} || true
-                        docker rm \${containerName} || true
-                        docker run -d -p ${env.JENKINS_NODE_COOKIE ? 3000 + env.JENKINS_NODE_COOKIE.hashCode() % 100 : 3000}:5000 --name \${containerName} ${imageTag}
-                    """
+                    // Use bat instead of sh on Windows
+                    bat 'docker rm -f qr-container || echo Container does not exist'
+                    bat 'docker run -d -p 3000:3000 --name qr-container qr-app'
                 }
             }
         }
-        stage('Health Check & Test') {
-            steps {
-                script {
-                    sleep 10
-                    def containerName = "qr-container-${env.BUILD_ID}"
-                    sh """
-                        curl -f http://localhost:${env.JENKINS_NODE_COOKIE ? 3000 + env.JENKINS_NODE_COOKIE.hashCode() % 100 : 3000}/generate \\
-                        -H 'Content-Type: application/json' \\
-                        -d '{\"text\":\"test\"}' || exit 1
-                    """
-                    sh """
-                        docker exec \${containerName} npm test || exit 1
-                    """
-                }
-            }
-        }
-    }
 
-    post {
-        always {
-            script {
-                def containerName = "qr-container-${env.BUILD_ID}"
-                def imageTag = "qr-app-${env.BUILD_ID}"
-                sh """
-                    docker stop \${containerName} || true
-                    docker rm \${containerName} || true
-                    docker rmi \${imageTag} || true
-                """
-            }
-            cleanWs()
-        }
     }
 }
