@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium QR Code Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-start: #0f172a;
+            --bg-end: #1e1b4b;
+            --surface: rgba(255, 255, 255, 0.05);
+            --surface-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Fallback for browsers that don't support text clipping */
+            color: #818cf8;
+        }
+
+        @supports (-webkit-background-clip: text) {
+            h1 {
+                color: transparent;
+            }
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            font-size: 0.95rem;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid var(--surface-border);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        input[type="text"]::placeholder {
+            color: #64748b;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .result-container {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--surface-border);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .qr-wrapper {
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        #qrImage {
+            max-width: 200px;
+            height: auto;
+            display: block;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid var(--surface-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-secondary svg {
+            margin-right: 8px;
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Generator</h1>
+        <p class="subtitle">Create and download high-quality QR codes instantly.</p>
+
+        <div class="input-group">
+            <label for="text">Content (URL, text, etc.)</label>
+            <input type="text" id="text" placeholder="https://example.com" autocomplete="off">
+        </div>
+
+        <button id="generateBtn" onclick="generateQR()">
+            <span id="btnText">Generate QR Code</span>
+            <div class="loader" id="loader"></div>
+        </button>
+        
+        <div id="errorMsg" class="error-message"></div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="qr-wrapper">
+                <img id="qrImage" alt="Generated QR Code" />
+            </div>
+            <button class="btn-secondary" onclick="downloadQR()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Image
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentQRDataUrl = null;
+
+        async function generateQR() {
+            const input = document.getElementById('text');
+            const text = input.value.trim();
+            const btn = document.getElementById('generateBtn');
+            const btnText = document.getElementById('btnText');
+            const loader = document.getElementById('loader');
+            const resultContainer = document.getElementById('resultContainer');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (!text) {
+                input.focus();
+                return;
+            }
+
+            // Reset UI
+            errorMsg.style.display = 'none';
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+            resultContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate QR code');
+                }
+
+                const data = await response.json();
+                currentQRDataUrl = data.qrCode;
+                document.getElementById('qrImage').src = currentQRDataUrl;
+                
+                resultContainer.style.display = 'flex';
+            } catch (err) {
+                errorMsg.textContent = 'An error occurred. Please try again.';
+                errorMsg.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btnText.style.display = 'block';
+                loader.style.display = 'none';
+            }
+        }
+
+        function downloadQR() {
+            if (!currentQRDataUrl) return;
+            
+            const a = document.createElement('a');
+            a.href = currentQRDataUrl;
+            a.download = 'qrcode.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Allow Enter key to trigger generation
+        document.getElementById('text').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateQR();
+            }
+        });
+    </script>
+</body>
+</html>
