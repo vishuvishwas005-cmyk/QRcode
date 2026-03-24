@@ -25,6 +25,6 @@ app.post('/generate', async (req, res) => {
 });
 
 // server
-app.listen(5000, () => {
-    console.log('Server is running on http://localhost:5000');
+app.listen(process.env.PORT || 5000, () => {
+    console.log(`Server is running on http://localhost:${process.env.PORT || 5000}`);
 });

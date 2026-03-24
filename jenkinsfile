@@ -2,10 +2,9 @@ pipeline {
     agent any
 
     stages {
-
-        stage('Clone Code') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/vishuvishwas005-cmyk/QRcode.git'
+                checkout scm
             }
         }
 
@@ -20,11 +19,22 @@ pipeline {
         stage('Run Container') {
             steps {
                 script {
-                    sh 'docker rm -f qr-container || true'
-                    sh 'docker run -d -p 3000:3000 --name qr-container qr-app'
+                    sh 'docker stop qr-container || true'
+                    sh 'docker rm qr-container || true'
+                    sh 'docker run -d -p 3000:5000 --name qr-container qr-app'
                 }
             }
         }
+    }
 
+    post {
+        always {
+            script {
+                sh 'docker stop qr-container || true'
+                sh 'docker rm qr-container || true'
+                sh 'docker rmi qr-app || true'
+            }
+            cleanWs()
+        }
     }
 }
