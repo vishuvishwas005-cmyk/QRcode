@@ -23,7 +23,7 @@ pipeline {
                 script {
                     // Use bat instead of sh on Windows
                     bat 'docker rm -f qr-container || echo Container does not exist'
-                    bat 'docker run -d -p 3000:3000 --name qr-container qr-app'
+                    bat 'docker run -d -p 5000:5000 --name qr-container qr-app'
                 }
             }
         }
